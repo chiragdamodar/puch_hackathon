@@ -1,18 +1,21 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.RideBookingTool = void 0;
 // src/tools/ride-booking.ts
-import { z } from 'zod';
-import { NammaYatriService } from '../services/namma-yatri.service.js';
-import { db } from '../services/database.service.js';
-import { logger } from '../utils/logger.js';
-const RideBookingSchema = z.object({
-    pickup: z.string().min(1, 'Pickup location is required'),
-    destination: z.string().min(1, 'Destination is required'),
-    rideType: z.enum(['auto', 'bike', 'cab']).optional(),
-    scheduledTime: z.string().optional(),
+const zod_1 = require("zod");
+const namma_yatri_service_1 = require("../services/namma-yatri.service");
+const database_service_1 = require("../services/database.service");
+const logger_1 = require("../utils/logger");
+const RideBookingSchema = zod_1.z.object({
+    pickup: zod_1.z.string().min(1, 'Pickup location is required'),
+    destination: zod_1.z.string().min(1, 'Destination is required'),
+    rideType: zod_1.z.enum(['auto', 'bike', 'cab']).optional(),
+    scheduledTime: zod_1.z.string().optional(),
 });
-export class RideBookingTool {
+class RideBookingTool {
     nammaYatriService;
     constructor() {
-        this.nammaYatriService = new NammaYatriService();
+        this.nammaYatriService = new namma_yatri_service_1.NammaYatriService();
     }
     get definition() {
         return {
@@ -50,7 +53,7 @@ export class RideBookingTool {
         let error;
         try {
             const params = RideBookingSchema.parse(args);
-            logger.info('Processing ride booking request', params);
+            logger_1.logger.info('Processing ride booking request', params);
             // Search for ride estimates
             const estimates = await this.nammaYatriService.searchRides({
                 pickup: params.pickup,
@@ -81,7 +84,7 @@ export class RideBookingTool {
         }
         catch (err) {
             error = err.message || 'Unknown error occurred';
-            logger.error('Ride booking tool error:', err);
+            logger_1.logger.error('Ride booking tool error:', err);
             return {
                 success: false,
                 error,
@@ -94,7 +97,7 @@ export class RideBookingTool {
         }
         finally {
             try {
-                await db.trackUsage({
+                await database_service_1.db.trackUsage({
                     toolName: 'book_ride',
                     userId: undefined,
                     location: `${args?.pickup} to ${args?.destination}`,
@@ -106,9 +109,10 @@ export class RideBookingTool {
                 });
             }
             catch (trackingError) {
-                logger.error('Error tracking ride booking usage:', trackingError);
+                logger_1.logger.error('Error tracking ride booking usage:', trackingError);
             }
         }
     }
 }
+exports.RideBookingTool = RideBookingTool;
 //# sourceMappingURL=ride-booking.js.map

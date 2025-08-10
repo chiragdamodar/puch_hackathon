@@ -1,6 +1,9 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.ValidateTool = void 0;
 // src/tools/validate.ts
-import { logger } from '../utils/logger.js';
-export class ValidateTool {
+const logger_js_1 = require("../utils/logger.js");
+class ValidateTool {
     definition;
     constructor() {
         this.definition = {
@@ -20,12 +23,12 @@ export class ValidateTool {
     }
     async handler(params) {
         try {
-            logger.info('Validating MCP bearer token', { token: params.token.substring(0, 10) + '...' });
+            logger_js_1.logger.info('Validating MCP bearer token', { token: params.token.substring(0, 10) + '...' });
             // Validate the token against environment variable
             const expectedToken = process.env.MCP_BEARER_TOKEN;
             const expectedPhone = process.env.MCP_VALIDATE_PHONE_NUMBER;
             if (!expectedToken || !expectedPhone) {
-                logger.error('MCP configuration missing - check MCP_BEARER_TOKEN and MCP_VALIDATE_PHONE_NUMBER in .env');
+                logger_js_1.logger.error('MCP configuration missing - check MCP_BEARER_TOKEN and MCP_VALIDATE_PHONE_NUMBER in .env');
                 return {
                     success: false,
                     error: 'Server configuration error',
@@ -33,7 +36,7 @@ export class ValidateTool {
             }
             // Check if token matches
             if (params.token === expectedToken) {
-                logger.info('MCP token validation successful', { phone: expectedPhone });
+                logger_js_1.logger.info('MCP token validation successful', { phone: expectedPhone });
                 // Return phone number in the format required by Pucho.ai: {country_code}{number}
                 return {
                     success: true,
@@ -42,7 +45,7 @@ export class ValidateTool {
                 };
             }
             else {
-                logger.warn('MCP token validation failed - token mismatch');
+                logger_js_1.logger.warn('MCP token validation failed - token mismatch');
                 return {
                     success: false,
                     error: 'Invalid token',
@@ -50,7 +53,7 @@ export class ValidateTool {
             }
         }
         catch (error) {
-            logger.error('Error in validate tool:', error);
+            logger_js_1.logger.error('Error in validate tool:', error);
             return {
                 success: false,
                 error: error.message || 'Validation failed',
@@ -78,4 +81,5 @@ export class ValidateTool {
         return `hackathon_${timestamp}_${random}`;
     }
 }
+exports.ValidateTool = ValidateTool;
 //# sourceMappingURL=validate.js.map

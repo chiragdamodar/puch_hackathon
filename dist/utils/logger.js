@@ -1,26 +1,33 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.logger = void 0;
+exports.withTiming = withTiming;
 // src/utils/logger.ts
-import winston from 'winston';
-const logFormat = winston.format.combine(winston.format.timestamp(), winston.format.errors({ stack: true }), winston.format.json());
-export const logger = winston.createLogger({
+const winston_1 = __importDefault(require("winston"));
+const logFormat = winston_1.default.format.combine(winston_1.default.format.timestamp(), winston_1.default.format.errors({ stack: true }), winston_1.default.format.json());
+exports.logger = winston_1.default.createLogger({
     level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
     format: logFormat,
     defaultMeta: { service: 'plato-mcp-server' },
     transports: [
-        new winston.transports.File({ filename: 'logs/error.log', level: 'error' }),
-        new winston.transports.File({ filename: 'logs/combined.log' }),
+        new winston_1.default.transports.File({ filename: 'logs/error.log', level: 'error' }),
+        new winston_1.default.transports.File({ filename: 'logs/combined.log' }),
     ],
 });
 if (process.env.NODE_ENV !== 'production') {
-    logger.add(new winston.transports.Console({
-        format: winston.format.combine(winston.format.colorize(), winston.format.simple())
+    exports.logger.add(new winston_1.default.transports.Console({
+        format: winston_1.default.format.combine(winston_1.default.format.colorize(), winston_1.default.format.simple())
     }));
 }
 // Helper function for timing operations
-export function withTiming(fn, label) {
+function withTiming(fn, label) {
     const start = Date.now();
     return fn().finally(() => {
         const duration = Date.now() - start;
-        logger.info(`${label} completed in ${duration}ms`);
+        exports.logger.info(`${label} completed in ${duration}ms`);
     });
 }
 //# sourceMappingURL=logger.js.map

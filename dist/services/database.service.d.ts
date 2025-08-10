@@ -1,6 +1,11 @@
+import { PrismaClient } from '@prisma/client';
 declare class DatabaseService {
     private prisma;
-    constructor();
+    private static instance;
+    private constructor();
+    static getInstance(): DatabaseService;
+    connect(): Promise<void>;
+    disconnect(): Promise<void>;
     trackUsage(data: {
         toolName: string;
         userId?: string;
@@ -22,6 +27,60 @@ declare class DatabaseService {
         duration: number;
         timestamp: Date;
     }>;
+    createOrder(data: {
+        type: string;
+        userId?: string;
+        status: string;
+        details: any;
+        amount?: number;
+        location?: string;
+        usageId?: string;
+    }): Promise<{
+        id: string;
+        userId: string | null;
+        location: string | null;
+        timestamp: Date;
+        type: string;
+        status: string;
+        details: string;
+        amount: number | null;
+        usageId: string | null;
+    }>;
+    updateOrderStatus(orderId: string, status: string): Promise<{
+        id: string;
+        userId: string | null;
+        location: string | null;
+        timestamp: Date;
+        type: string;
+        status: string;
+        details: string;
+        amount: number | null;
+        usageId: string | null;
+    }>;
+    getMetrics(): Promise<{
+        totalUsage: number;
+        todayUsage: number;
+        toolStats: {
+            toolName: string;
+            count: number;
+        }[];
+        recentActivity: {
+            toolName: string;
+            success: boolean;
+            timestamp: Date;
+        }[];
+    }>;
+    getOrdersByType(type: string, limit?: number): Promise<{
+        id: string;
+        userId: string | null;
+        location: string | null;
+        timestamp: Date;
+        type: string;
+        status: string;
+        details: string;
+        amount: number | null;
+        usageId: string | null;
+    }[]>;
     trackApiCall(data: {
         service: string;
         endpoint: string;
@@ -35,20 +94,7 @@ declare class DatabaseService {
         endpoint: string;
         statusCode: number;
     }>;
-    getUsageStats(): Promise<{
-        totalUsage: number;
-        todayUsage: number;
-        toolStats: {
-            toolName: string;
-            count: number;
-        }[];
-        recentActivity: {
-            toolName: string;
-            success: boolean;
-            timestamp: Date;
-        }[];
-    }>;
-    disconnect(): Promise<void>;
+    get client(): PrismaClient<import(".prisma/client").Prisma.PrismaClientOptions, never, import("@prisma/client/runtime/library").DefaultArgs>;
 }
 export declare const db: DatabaseService;
 export {};

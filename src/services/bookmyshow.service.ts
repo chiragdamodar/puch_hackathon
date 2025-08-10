@@ -173,6 +173,11 @@ export class BookMyShowService {
             rating: rating || 0,
             duration: duration || 'N/A',
             language: language || 'Hindi',
+            poster: '',
+            description: '',
+            releaseDate: '',
+            cast: [],
+            director: '',
             cinemas: [], // Will be populated in detailed view
           });
         });
@@ -205,6 +210,11 @@ export class BookMyShowService {
         rating: rating || 0,
         duration: duration || 'N/A',
         language: language || 'Hindi',
+        poster: '',
+        description: '',
+        releaseDate: '',
+        cast: [],
+        director: '',
         cinemas,
       };
     } catch (error) {
@@ -247,6 +257,9 @@ export class BookMyShowService {
             id: `cinema_${index}`,
             name,
             location,
+            distance: 'N/A',
+            rating: 0,
+            amenities: [],
             shows,
           });
         });
@@ -277,6 +290,7 @@ export class BookMyShowService {
         
         if (time && /\d{1,2}:\d{2}/.test(time)) {
           showtimes.push({
+            id: `showtime_${index}`,
             time,
             price: this.extractPriceFromShowtime($element),
             availableSeats: Math.floor(Math.random() * 50) + 10, // Mock available seats
@@ -291,7 +305,7 @@ export class BookMyShowService {
     return showtimes;
   }
 
-  private parseShowtimesFromElement($element: cheerio.Cheerio<cheerio.Element>): ShowTime[] {
+  private parseShowtimesFromElement($element: cheerio.Cheerio<any>): ShowTime[] {
     const shows: ShowTime[] = [];
     
     $element.find('.showtime-pill, .session-time, .time-slot').each((index, showElement) => {
@@ -300,6 +314,7 @@ export class BookMyShowService {
       
       if (time && /\d{1,2}:\d{2}/.test(time)) {
         shows.push({
+          id: `showtime_${index}`,
           time,
           price: Math.floor(Math.random() * 200) + 100, // Mock price ₹100-300
           availableSeats: Math.floor(Math.random() * 50) + 10,
@@ -312,7 +327,7 @@ export class BookMyShowService {
   }
 
   // Helper extraction methods
-  private extractMovieId($element: cheerio.Cheerio<cheerio.Element>): string | null {
+  private extractMovieId($element: cheerio.Cheerio<any>): string | null {
     const href = $element.find('a').attr('href');
     if (href) {
       const match = href.match(/\/movies\/([^\/\?]+)/);
@@ -321,13 +336,13 @@ export class BookMyShowService {
     return null;
   }
 
-  private extractGenre($element: cheerio.Cheerio<cheerio.Element>): string | null {
+  private extractGenre($element: cheerio.Cheerio<any>): string | null {
     return $element.find('.genre').text().trim() ||
            $element.find('[data-testid="genre"]').text().trim() ||
            null;
   }
 
-  private extractRating($element: cheerio.Cheerio<cheerio.Element>): number | null {
+  private extractRating($element: cheerio.Cheerio<any>): number | null {
     const ratingText = $element.find('.rating').text().trim() ||
                       $element.find('[data-testid="rating"]').text().trim();
     
@@ -335,13 +350,13 @@ export class BookMyShowService {
     return isNaN(rating) ? null : rating;
   }
 
-  private extractDuration($element: cheerio.Cheerio<cheerio.Element>): string | null {
+  private extractDuration($element: cheerio.Cheerio<any>): string | null {
     return $element.find('.duration').text().trim() ||
            $element.find('[data-testid="duration"]').text().trim() ||
            null;
   }
 
-  private extractLanguage($element: cheerio.Cheerio<cheerio.Element>): string | null {
+  private extractLanguage($element: cheerio.Cheerio<any>): string | null {
     return $element.find('.language').text().trim() ||
            $element.find('[data-testid="language"]').text().trim() ||
            null;
@@ -390,7 +405,7 @@ export class BookMyShowService {
     return 'Hindi';
   }
 
-  private extractPriceFromShowtime($element: cheerio.Cheerio<cheerio.Element>): number {
+  private extractPriceFromShowtime($element: cheerio.Cheerio<any>): number {
     const priceText = $element.find('.price').text().trim() ||
                      $element.attr('data-price') ||
                      '';
@@ -399,7 +414,7 @@ export class BookMyShowService {
     return isNaN(price) ? Math.floor(Math.random() * 200) + 100 : price;
   }
 
-  private extractScreenType($element: cheerio.Cheerio<cheerio.Element>): string {
+  private extractScreenType($element: cheerio.Cheerio<any>): string {
     const screenText = $element.find('.screen-type').text().trim() ||
                       $element.attr('data-screen-type') ||
                       '';
@@ -444,6 +459,11 @@ export class BookMyShowService {
         rating: 8.8,
         duration: '3h 7m',
         language: 'Telugu',
+        poster: '',
+        description: 'Epic period action film',
+        releaseDate: '2022-03-25',
+        cast: ['Ram Charan', 'Jr. NTR'],
+        director: 'S. S. Rajamouli',
         cinemas: this.getMockCinemas(),
       },
       {
@@ -453,6 +473,11 @@ export class BookMyShowService {
         rating: 8.4,
         duration: '2h 48m',
         language: 'Kannada',
+        poster: '',
+        description: 'Action-packed crime thriller',
+        releaseDate: '2022-04-14',
+        cast: ['Yash', 'Sanjay Dutt'],
+        director: 'Prashanth Neel',
         cinemas: this.getMockCinemas(),
       },
       {
@@ -462,6 +487,11 @@ export class BookMyShowService {
         rating: 5.6,
         duration: '2h 47m',
         language: 'Hindi',
+        poster: '',
+        description: 'Fantasy adventure film',
+        releaseDate: '2022-09-09',
+        cast: ['Ranbir Kapoor', 'Alia Bhatt'],
+        director: 'Ayan Mukerji',
         cinemas: this.getMockCinemas(),
       },
     ];
@@ -481,12 +511,18 @@ export class BookMyShowService {
         id: 'cinema_001',
         name: 'PVR Forum Mall',
         location: 'Koramangala, Bangalore',
+        distance: '5.2 km',
+        rating: 4.2,
+        amenities: ['Parking', 'Food Court', 'AC'],
         shows: this.getMockShowtimes(),
       },
       {
         id: 'cinema_002',
         name: 'INOX Garuda Mall',
         location: 'Magadi Road, Bangalore',
+        distance: '7.8 km',
+        rating: 4.0,
+        amenities: ['Parking', 'Cafe', 'AC'],
         shows: this.getMockShowtimes(),
       },
     ];
@@ -494,10 +530,10 @@ export class BookMyShowService {
 
   private getMockShowtimes(): ShowTime[] {
     return [
-      { time: '10:00 AM', price: 150, availableSeats: 45, screenType: '2D' },
-      { time: '1:30 PM', price: 180, availableSeats: 32, screenType: '2D' },
-      { time: '6:45 PM', price: 220, availableSeats: 28, screenType: '2D' },
-      { time: '10:15 PM', price: 200, availableSeats: 35, screenType: '2D' },
+      { id: 'show_001', time: '10:00 AM', price: 150, availableSeats: 45, screenType: '2D' },
+      { id: 'show_002', time: '1:30 PM', price: 180, availableSeats: 32, screenType: '2D' },
+      { id: 'show_003', time: '6:45 PM', price: 220, availableSeats: 28, screenType: '2D' },
+      { id: 'show_004', time: '10:15 PM', price: 200, availableSeats: 35, screenType: '2D' },
     ];
   }
 }

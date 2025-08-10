@@ -1,18 +1,21 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.FoodOrderingTool = void 0;
 // src/tools/food-ordering.ts
-import { z } from 'zod';
-import { ONDCService } from '../services/ondc.service.js';
-import { db } from '../services/database.service.js';
-import { logger } from '../utils/logger.js';
-const FoodOrderSchema = z.object({
-    location: z.string().min(1, 'Location is required'),
-    cuisine: z.string().optional(),
-    budget: z.number().positive().optional(),
-    dishType: z.enum(['veg', 'non-veg', 'both']).optional(),
+const zod_1 = require("zod");
+const ondc_service_1 = require("../services/ondc.service");
+const database_service_1 = require("../services/database.service");
+const logger_1 = require("../utils/logger");
+const FoodOrderSchema = zod_1.z.object({
+    location: zod_1.z.string().min(1, 'Location is required'),
+    cuisine: zod_1.z.string().optional(),
+    budget: zod_1.z.number().positive().optional(),
+    dishType: zod_1.z.enum(['veg', 'non-veg', 'both']).optional(),
 });
-export class FoodOrderingTool {
+class FoodOrderingTool {
     ondcService;
     constructor() {
-        this.ondcService = new ONDCService();
+        this.ondcService = new ondc_service_1.ONDCService();
     }
     get definition() {
         return {
@@ -51,7 +54,7 @@ export class FoodOrderingTool {
         try {
             // Validate input
             const params = FoodOrderSchema.parse(args);
-            logger.info('Processing food order request', params);
+            logger_1.logger.info('Processing food order request', params);
             // Search restaurants
             const restaurants = await this.ondcService.searchRestaurants({
                 location: params.location,
@@ -86,7 +89,7 @@ export class FoodOrderingTool {
         }
         catch (err) {
             error = err.message || 'Unknown error occurred';
-            logger.error('Food ordering tool error:', err);
+            logger_1.logger.error('Food ordering tool error:', err);
             return {
                 success: false,
                 error,
@@ -100,7 +103,7 @@ export class FoodOrderingTool {
         finally {
             // Track usage
             try {
-                await db.trackUsage({
+                await database_service_1.db.trackUsage({
                     toolName: 'order_food',
                     userId: undefined, // Could be extracted from context
                     location: args?.location,
@@ -112,9 +115,10 @@ export class FoodOrderingTool {
                 });
             }
             catch (trackingError) {
-                logger.error('Error tracking food ordering usage:', trackingError);
+                logger_1.logger.error('Error tracking food ordering usage:', trackingError);
             }
         }
     }
 }
+exports.FoodOrderingTool = FoodOrderingTool;
 //# sourceMappingURL=food-ordering.js.map

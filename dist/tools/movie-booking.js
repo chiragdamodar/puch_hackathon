@@ -1,178 +1,139 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.MovieBookingTool = void 0;
 // src/tools/movie-booking.ts
-import { BookMyShowService } from '../services/bookmyshow.service.js';
-import { logger } from '../utils/logger.js';
-export class MovieBookingTool {
-    definition;
+const zod_1 = require("zod");
+const bookmyshow_service_1 = require("../services/bookmyshow.service");
+const database_service_1 = require("../services/database.service");
+const logger_1 = require("../utils/logger");
+const MovieBookingSchema = zod_1.z.object({
+    city: zod_1.z.string().min(1, 'City is required'),
+    movieTitle: zod_1.z.string().optional(),
+    cinemaName: zod_1.z.string().optional(),
+    date: zod_1.z.string().optional(),
+    showTime: zod_1.z.string().optional(),
+});
+class MovieBookingTool {
     bookMyShowService;
     constructor() {
-        this.bookMyShowService = new BookMyShowService();
-        this.definition = {
+        this.bookMyShowService = new bookmyshow_service_1.BookMyShowService();
+    }
+    get definition() {
+        return {
             name: 'book_movie',
-            description: 'Search for movies and book movie tickets through BookMyShow integration',
+            description: 'Search movies and showtimes, find cinemas and ticket prices via BookMyShow scraping.',
             inputSchema: {
                 type: 'object',
                 properties: {
-                    action: {
-                        type: 'string',
-                        enum: ['search_movies', 'get_showtimes', 'book_tickets'],
-                        description: 'Action to perform: search_movies, get_showtimes, or book_tickets',
-                    },
                     city: {
                         type: 'string',
-                        description: 'City name (e.g., Bangalore, Mumbai, Delhi)',
+                        description: 'City name (e.g., "Bangalore", "Mumbai", "Mysuru")',
                     },
-                    movieName: {
+                    movieTitle: {
                         type: 'string',
-                        description: 'Name of the movie to search for (optional)',
+                        description: 'Specific movie title to search for',
                     },
-                    genre: {
+                    cinemaName: {
                         type: 'string',
-                        description: 'Movie genre filter (optional)',
-                    },
-                    language: {
-                        type: 'string',
-                        description: 'Movie language (e.g., Hindi, English, Telugu, Kannada)',
+                        description: 'Preferred cinema name',
                     },
                     date: {
                         type: 'string',
-                        description: 'Date for showtimes (YYYY-MM-DD format, optional)',
+                        description: 'Date for the show (YYYY-MM-DD format)',
                     },
-                    movieId: {
+                    showTime: {
                         type: 'string',
-                        description: 'Movie ID for getting showtimes or booking (required for get_showtimes and book_tickets)',
-                    },
-                    cinemaId: {
-                        type: 'string',
-                        description: 'Cinema ID for booking (required for book_tickets)',
-                    },
-                    showTimeId: {
-                        type: 'string',
-                        description: 'Show time ID for booking (required for book_tickets)',
-                    },
-                    seats: {
-                        type: 'array',
-                        items: { type: 'string' },
-                        description: 'Array of seat numbers to book (required for book_tickets)',
-                    },
-                    customerDetails: {
-                        type: 'object',
-                        properties: {
-                            name: { type: 'string' },
-                            email: { type: 'string' },
-                            phone: { type: 'string' },
-                        },
-                        description: 'Customer details for booking (required for book_tickets)',
+                        description: 'Preferred show time',
                     },
                 },
-                required: ['action', 'city'],
+                required: ['city'],
             },
         };
     }
-    async handler(params) {
+    async handler(args) {
         const startTime = Date.now();
+        let success = false;
+        let responseData = null;
+        let error;
         try {
-            logger.info('Executing movie booking tool', { action: params.action, city: params.city });
-            let result;
-            switch (params.action) {
-                case 'search_movies':
-                    result = await this.searchMovies(params);
-                    break;
-                case 'get_showtimes':
-                    if (!params.movieId) {
-                        throw new Error('movieId is required for get_showtimes action');
-                    }
-                    result = await this.getShowtimes(params);
-                    break;
-                case 'book_tickets':
-                    if (!params.movieId || !params.cinemaId || !params.showTimeId || !params.seats || !params.customerDetails) {
-                        throw new Error('movieId, cinemaId, showTimeId, seats, and customerDetails are required for book_tickets action');
-                    }
-                    result = await this.bookTickets(params);
-                    break;
-                default:
-                    throw new Error(`Invalid action: ${params.action}. Must be one of: search_movies, get_showtimes, book_tickets`);
+            const params = MovieBookingSchema.parse(args);
+            logger_1.logger.info('Processing movie booking request', params);
+            // Search for movies
+            const movies = await this.bookMyShowService.searchMovies({
+                city: params.city,
+                movieTitle: params.movieTitle,
+                date: params.date,
+            });
+            if (movies.length === 0) {
+                throw new Error(`No movies found in ${params.city}${params.movieTitle ? ` for "${params.movieTitle}"` : ''}`);
             }
-            const duration = Date.now() - startTime;
+            // Filter by cinema if specified
+            let filteredMovies = movies;
+            if (params.cinemaName) {
+                filteredMovies = movies.map(movie => ({
+                    ...movie,
+                    cinemas: movie.cinemas.filter(cinema => cinema.name.toLowerCase().includes(params.cinemaName.toLowerCase())),
+                })).filter(movie => movie.cinemas.length > 0);
+            }
+            // Filter by show time if specified
+            if (params.showTime) {
+                filteredMovies = filteredMovies.map(movie => ({
+                    ...movie,
+                    cinemas: movie.cinemas.map(cinema => ({
+                        ...cinema,
+                        shows: cinema.shows.filter(show => show.time.includes(params.showTime)),
+                    })).filter(cinema => cinema.shows.length > 0),
+                })).filter(movie => movie.cinemas.length > 0);
+            }
+            responseData = {
+                movies: filteredMovies.slice(0, 3), // Limit to top 3 movies
+                searchCriteria: params,
+                totalFound: filteredMovies.length,
+                message: `Found ${filteredMovies.length} movies in ${params.city}`,
+                bookingNote: 'To book tickets, visit BookMyShow website or app with the cinema and showtime details.',
+            };
+            success = true;
             return {
                 success: true,
-                data: result,
+                data: responseData,
                 metadata: {
-                    duration,
+                    duration: Date.now() - startTime,
                     timestamp: new Date().toISOString(),
-                    source: 'bookmyshow',
+                    source: 'BookMyShow',
                 },
             };
         }
-        catch (error) {
-            const duration = Date.now() - startTime;
-            logger.error('Error in movie booking tool:', error);
+        catch (err) {
+            error = err.message || 'Unknown error occurred';
+            logger_1.logger.error('Movie booking tool error:', err);
             return {
                 success: false,
-                error: error.message || 'Failed to execute movie booking action',
+                error,
                 metadata: {
-                    duration,
+                    duration: Date.now() - startTime,
                     timestamp: new Date().toISOString(),
-                    source: 'bookmyshow',
+                    source: 'BookMyShow',
                 },
             };
         }
-    }
-    async searchMovies(params) {
-        const movies = await this.bookMyShowService.searchMovies(params);
-        return {
-            action: 'search_movies',
-            city: params.city,
-            filters: {
-                movieName: params.movieName,
-                genre: params.genre,
-                language: params.language,
-            },
-            results: movies,
-            count: movies.length,
-            message: `Found ${movies.length} movies in ${params.city}`,
-        };
-    }
-    async getShowtimes(params) {
-        const cinemas = await this.bookMyShowService.getCinemasAndShowtimes(params.movieId, params.city, params.date);
-        return {
-            action: 'get_showtimes',
-            movieId: params.movieId,
-            city: params.city,
-            date: params.date || 'today',
-            cinemas,
-            totalCinemas: cinemas.length,
-            totalShowtimes: cinemas.reduce((total, cinema) => total + cinema.showtimes.length, 0),
-            message: `Found ${cinemas.length} cinemas with showtimes for this movie`,
-        };
-    }
-    async bookTickets(params) {
-        const booking = await this.bookMyShowService.bookMovie(params);
-        return {
-            action: 'book_tickets',
-            booking,
-            message: 'Movie tickets booked successfully! Please save your booking ID for reference.',
-            instructions: [
-                'Please arrive at the cinema 15 minutes before showtime',
-                'Show this booking confirmation at the entrance',
-                'Carry a valid ID proof',
-                'Maintain social distancing and follow cinema guidelines',
-            ],
-        };
-    }
-    /**
-     * Get popular movies for a city (helper method)
-     */
-    async getPopularMovies(city) {
-        return this.searchMovies({ city });
-    }
-    /**
-     * Get available cities (helper method)
-     */
-    getAvailableCities() {
-        return [
-            'Bangalore', 'Mumbai', 'Delhi', 'Chennai', 'Hyderabad',
-            'Pune', 'Kolkata', 'Mysuru', 'Kochi', 'Ahmedabad'
-        ];
+        finally {
+            try {
+                await database_service_1.db.trackUsage({
+                    toolName: 'book_movie',
+                    userId: undefined,
+                    location: args?.city,
+                    parameters: args,
+                    response: responseData,
+                    success,
+                    duration: Date.now() - startTime,
+                    error,
+                });
+            }
+            catch (trackingError) {
+                logger_1.logger.error('Error tracking movie booking usage:', trackingError);
+            }
+        }
     }
 }
+exports.MovieBookingTool = MovieBookingTool;
 //# sourceMappingURL=movie-booking.js.map

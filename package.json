@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "Multi-service booking platform MCP server for Pucho.ai integration",
   "main": "dist/server.js",
-  "type": "module",
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsc",

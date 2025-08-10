@@ -1,63 +1,39 @@
-import { Movie, Cinema } from '../types/index.js';
-export interface MovieSearchParams {
-    city: string;
-    movieName?: string;
-    genre?: string;
-    language?: string;
-    date?: string;
-}
-export interface BookingParams {
-    movieId: string;
-    cinemaId: string;
-    showTimeId: string;
-    seats: string[];
-    customerDetails: {
-        name: string;
-        email: string;
-        phone: string;
-    };
-}
+import { Movie, ShowTime } from '../types';
 export declare class BookMyShowService {
     private apiClient;
     private baseURL;
-    private scrapingDelay;
+    private userAgent;
     constructor();
     private setupInterceptors;
     private trackApiCall;
-    /**
-     * Search for movies in a specific city
-     */
-    searchMovies(params: MovieSearchParams): Promise<Movie[]>;
-    /**
-     * Get cinemas and showtimes for a specific movie
-     */
-    getCinemasAndShowtimes(movieId: string, city: string, date?: string): Promise<Cinema[]>;
-    /**
-     * Mock booking functionality (BookMyShow doesn't allow automated booking)
-     */
-    bookMovie(params: BookingParams): Promise<any>;
-    /**
-     * Parse movies from HTML response
-     */
+    searchMovies(params: {
+        city: string;
+        movieTitle?: string;
+        date?: string;
+    }): Promise<Movie[]>;
+    getMovieDetails(movieId: string, cityCode: string, date?: string): Promise<Movie | null>;
+    getCinemaShowtimes(movieId: string, cinemaId: string, cityCode: string, date?: string): Promise<ShowTime[]>;
     private parseMoviesFromHTML;
-    /**
-     * Parse cinemas from HTML response
-     */
+    private parseMovieDetailsFromHTML;
     private parseCinemasFromHTML;
-    private getCitySlug;
+    private parseShowtimesFromHTML;
+    private parseShowtimesFromElement;
     private extractMovieId;
-    private extractCinemaId;
-    private generateId;
-    private parsePrice;
+    private extractGenre;
+    private extractRating;
+    private extractDuration;
+    private extractLanguage;
+    private extractGenreFromDetails;
+    private extractRatingFromDetails;
+    private extractDurationFromDetails;
+    private extractLanguageFromDetails;
+    private extractPriceFromShowtime;
+    private extractScreenType;
+    private getCityCode;
     private getTodayDate;
-    private generateBookingId;
-    private generateQRCode;
-    private calculateAmount;
     private delay;
     private getMockMovies;
     private getMockCinemas;
-    private getMovieDetails;
-    private getCinemaDetails;
-    private getShowTimeDetails;
+    private getMockShowtimes;
 }
 //# sourceMappingURL=bookmyshow.service.d.ts.map

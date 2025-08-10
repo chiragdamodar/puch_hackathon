@@ -1,13 +1,19 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.NammaYatriService = void 0;
 // src/services/namma-yatri.service.ts
-import axios from 'axios';
-import { logger } from '../utils/logger';
-import { db } from './database.service';
-export class NammaYatriService {
+const axios_1 = __importDefault(require("axios"));
+const logger_1 = require("../utils/logger");
+const database_service_1 = require("./database.service");
+class NammaYatriService {
     apiClient;
     baseURL;
     constructor() {
         this.baseURL = process.env.NAMMA_YATRI_BASE_URL || 'https://api.sandbox.beckn.juspay.in';
-        this.apiClient = axios.create({
+        this.apiClient = axios_1.default.create({
             baseURL: this.baseURL,
             timeout: 15000,
             headers: {
@@ -35,7 +41,7 @@ export class NammaYatriService {
     }
     async trackApiCall(endpoint, statusCode, duration) {
         try {
-            await db.trackApiCall({
+            await database_service_1.db.trackApiCall({
                 service: 'namma_yatri',
                 endpoint,
                 statusCode,
@@ -43,12 +49,12 @@ export class NammaYatriService {
             });
         }
         catch (error) {
-            logger.error('Error tracking Namma Yatri API call:', error);
+            logger_1.logger.error('Error tracking Namma Yatri API call:', error);
         }
     }
     async searchRides(params) {
         try {
-            logger.info('Searching rides via Namma Yatri', params);
+            logger_1.logger.info('Searching rides via Namma Yatri', params);
             const searchPayload = {
                 context: {
                     domain: 'ONDC:TRV11',
@@ -86,7 +92,7 @@ export class NammaYatriService {
             return this.parseRideEstimates(response.data);
         }
         catch (error) {
-            logger.error('Error searching rides:', error);
+            logger_1.logger.error('Error searching rides:', error);
             return this.getMockRideEstimates(params);
         }
     }
@@ -129,7 +135,7 @@ export class NammaYatriService {
             return this.parseBookingResponse(response.data);
         }
         catch (error) {
-            logger.error('Error booking ride:', error);
+            logger_1.logger.error('Error booking ride:', error);
             throw new Error('Failed to book ride. Please try again.');
         }
     }
@@ -154,7 +160,7 @@ export class NammaYatriService {
             return this.parseStatusResponse(response.data);
         }
         catch (error) {
-            logger.error('Error getting ride status:', error);
+            logger_1.logger.error('Error getting ride status:', error);
             throw new Error('Failed to get ride status');
         }
     }
@@ -185,7 +191,7 @@ export class NammaYatriService {
             return estimates;
         }
         catch (error) {
-            logger.error('Error parsing ride estimates:', error);
+            logger_1.logger.error('Error parsing ride estimates:', error);
             return [];
         }
     }
@@ -302,4 +308,5 @@ export class NammaYatriService {
         return 5 + Math.random() * 10;
     }
 }
+exports.NammaYatriService = NammaYatriService;
 //# sourceMappingURL=namma-yatri.service.js.map

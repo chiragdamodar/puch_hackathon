@@ -1,16 +1,22 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.ONDCService = void 0;
 // src/services/ondc.service.ts
-import axios from 'axios';
-import { logger } from '../utils/logger.js';
-import { db } from './database.service.js';
-import { createONDCAuthenticator } from '../utils/ondc-auth.js';
-export class ONDCService {
+const axios_1 = __importDefault(require("axios"));
+const logger_js_1 = require("../utils/logger.js");
+const database_service_js_1 = require("./database.service.js");
+const ondc_auth_js_1 = require("../utils/ondc-auth.js");
+class ONDCService {
     apiClient;
     baseURL;
     authenticator;
     constructor() {
         this.baseURL = process.env.ONDC_BASE_URL || 'https://mock.ondc.org';
-        this.authenticator = createONDCAuthenticator();
-        this.apiClient = axios.create({
+        this.authenticator = (0, ondc_auth_js_1.createONDCAuthenticator)();
+        this.apiClient = axios_1.default.create({
             baseURL: this.baseURL,
             timeout: 15000,
             headers: {
@@ -30,10 +36,10 @@ export class ONDCService {
                     const requestBody = typeof config.data === 'string' ? config.data : JSON.stringify(config.data);
                     const authHeader = this.authenticator.generateAuthHeader(requestBody);
                     config.headers['Authorization'] = authHeader;
-                    logger.debug('Added ONDC auth header to request');
+                    logger_js_1.logger.debug('Added ONDC auth header to request');
                 }
                 catch (error) {
-                    logger.warn('Failed to add ONDC auth header, proceeding without auth:', error);
+                    logger_js_1.logger.warn('Failed to add ONDC auth header, proceeding without auth:', error);
                     // For mock server, we can proceed without auth
                     if (this.baseURL.includes('mock.ondc.org')) {
                         config.headers['Authorization'] = 'Bearer sandbox_test_key';
@@ -55,7 +61,7 @@ export class ONDCService {
     }
     async trackApiCall(endpoint, statusCode, duration) {
         try {
-            await db.trackApiCall({
+            await database_service_js_1.db.trackApiCall({
                 service: 'ondc',
                 endpoint,
                 statusCode,
@@ -63,12 +69,12 @@ export class ONDCService {
             });
         }
         catch (error) {
-            logger.error('Error tracking ONDC API call:', error);
+            logger_js_1.logger.error('Error tracking ONDC API call:', error);
         }
     }
     async searchRestaurants(params) {
         try {
-            logger.info('Searching restaurants via ONDC', params);
+            logger_js_1.logger.info('Searching restaurants via ONDC', params);
             const searchPayload = {
                 context: this.authenticator.createONDCContext('search', 'ONDC:RET11'),
                 message: {
@@ -102,7 +108,7 @@ export class ONDCService {
             return restaurants;
         }
         catch (error) {
-            logger.error('Error searching restaurants:', error);
+            logger_js_1.logger.error('Error searching restaurants:', error);
             // Return mock data for demo purposes
             return this.getMockRestaurants(params);
         }
@@ -129,7 +135,7 @@ export class ONDCService {
             return this.parseOrderResponse(response.data);
         }
         catch (error) {
-            logger.error('Error placing order:', error);
+            logger_js_1.logger.error('Error placing order:', error);
             throw new Error('Failed to place order. Please try again.');
         }
     }
@@ -148,7 +154,7 @@ export class ONDCService {
             }));
         }
         catch (error) {
-            logger.error('Error parsing ONDC restaurant data:', error);
+            logger_js_1.logger.error('Error parsing ONDC restaurant data:', error);
             return [];
         }
     }
@@ -248,4 +254,5 @@ export class ONDCService {
         return mockRestaurants;
     }
 }
+exports.ONDCService = ONDCService;
 //# sourceMappingURL=ondc.service.js.map

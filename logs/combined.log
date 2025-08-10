@@ -39,3 +39,7 @@
 {"level":"info","message":"Database connected successfully","service":"plato-mcp-server","timestamp":"2025-08-10T09:17:13.393Z"}
 {"level":"info","message":"Plato MCP Server started successfully","service":"plato-mcp-server","timestamp":"2025-08-10T09:17:13.396Z"}
 {"level":"info","message":"Dashboard server running on port 3002","service":"plato-mcp-server","timestamp":"2025-08-10T09:17:13.397Z"}
+{"0":"order_food","1":"book_ride","2":"book_movie","level":"info","message":"Initialized tools:","service":"plato-mcp-server","timestamp":"2025-08-10T10:41:45.771Z"}
+{"level":"info","message":"Database connected successfully","service":"plato-mcp-server","timestamp":"2025-08-10T10:41:45.802Z"}
+{"level":"info","message":"Plato MCP Server started successfully","service":"plato-mcp-server","timestamp":"2025-08-10T10:41:45.806Z"}
+{"level":"info","message":"Dashboard server running on port 3002","service":"plato-mcp-server","timestamp":"2025-08-10T10:41:45.807Z"}

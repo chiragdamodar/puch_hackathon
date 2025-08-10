@@ -54,7 +54,7 @@ export interface RideEstimate {
 export interface Movie {
     id: string;
     title: string;
-    genre: string;
+    genre: string[];
     rating: number;
     duration: string;
     language: string;
@@ -63,15 +63,16 @@ export interface Movie {
     releaseDate: string;
     cast: string[];
     director: string;
+    cinemas: Cinema[];
 }
 export interface Cinema {
     id: string;
     name: string;
     location: string;
-    distance: string;
-    rating: number;
-    amenities: string[];
-    showtimes: ShowTime[];
+    distance?: string;
+    rating?: number;
+    amenities?: string[];
+    shows: ShowTime[];
 }
 export interface ShowTime {
     id: string;

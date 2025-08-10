@@ -1,8 +1,45 @@
+"use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.ONDCAuthenticator = void 0;
+exports.createONDCAuthenticator = createONDCAuthenticator;
 // src/utils/ondc-auth.ts
-import { createHash } from 'crypto';
-import * as nacl from 'tweetnacl';
-import { logger } from './logger.js';
-export class ONDCAuthenticator {
+const crypto_1 = require("crypto");
+const nacl = __importStar(require("tweetnacl"));
+const logger_js_1 = require("./logger.js");
+class ONDCAuthenticator {
     config;
     constructor(config) {
         this.config = config;
@@ -25,11 +62,11 @@ export class ONDCAuthenticator {
             // Step 5: Construct Authorization header
             const keyId = `${this.config.subscriberId}|${this.config.uniqueKeyId}|ed25519`;
             const authHeader = `Signature keyId="${keyId}", algorithm="ed25519", created="${created}", expires="${expires}", headers="(created)(expires)digest", signature="${signature}"`;
-            logger.info('Generated ONDC auth header', { keyId, created, expires });
+            logger_js_1.logger.info('Generated ONDC auth header', { keyId, created, expires });
             return authHeader;
         }
         catch (error) {
-            logger.error('Error generating ONDC auth header:', error);
+            logger_js_1.logger.error('Error generating ONDC auth header:', error);
             throw new Error('Failed to generate authentication header');
         }
     }
@@ -41,7 +78,7 @@ export class ONDCAuthenticator {
     computeBlake512Hash(data) {
         // Using SHA-512 as fallback since Node.js doesn't have BLAKE-512 natively
         // For production ONDC integration, use proper BLAKE-512 implementation
-        const hash = createHash('sha512').update(data, 'utf8').digest('base64');
+        const hash = (0, crypto_1.createHash)('sha512').update(data, 'utf8').digest('base64');
         return hash;
     }
     /**
@@ -60,7 +97,7 @@ export class ONDCAuthenticator {
             return this.uint8ArrayToBase64(signatureBytes);
         }
         catch (error) {
-            logger.error('Error signing string with Ed25519:', error);
+            logger_js_1.logger.error('Error signing string with Ed25519:', error);
             throw new Error('Failed to sign request');
         }
     }
@@ -75,7 +112,7 @@ export class ONDCAuthenticator {
             return nacl.sign.detached.verify(messageBytes, signatureBytes, publicKeyBytes);
         }
         catch (error) {
-            logger.error('Error verifying signature:', error);
+            logger_js_1.logger.error('Error verifying signature:', error);
             return false;
         }
     }
@@ -125,10 +162,11 @@ export class ONDCAuthenticator {
         return Buffer.from(bytes).toString('base64');
     }
 }
+exports.ONDCAuthenticator = ONDCAuthenticator;
 /**
  * Create ONDC authenticator from environment variables
  */
-export function createONDCAuthenticator() {
+function createONDCAuthenticator() {
     const config = {
         signingPrivateKey: process.env.ONDC_SIGNING_PRIVATE_KEY,
         signingPublicKey: process.env.ONDC_SIGNING_PUBLIC_KEY,

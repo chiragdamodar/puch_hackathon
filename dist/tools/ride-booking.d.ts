@@ -1,4 +1,4 @@
-import { ToolResponse } from '../types/index.js';
+import { ToolResponse } from '../types';
 export declare class RideBookingTool {
     private nammaYatriService;
     constructor();
