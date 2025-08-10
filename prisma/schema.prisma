@@ -1,0 +1,57 @@
+// prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Usage {
+  id          String   @id @default(uuid())
+  toolName    String
+  userId      String?
+  location    String?
+  parameters  String
+  response    String?
+  success     Boolean
+  duration    Int
+  error       String?
+  timestamp   DateTime @default(now())
+  
+  // Relation to Order if the tool call resulted in a booking
+  order       Order?
+
+  @@index([toolName, timestamp])
+  @@index([timestamp])
+}
+
+model Order {
+  id          String   @id @default(uuid())
+  type        String   // 'food', 'ride', 'movie'
+  userId      String?
+  status      String   // 'pending', 'confirmed', 'cancelled', 'completed'
+  details     String
+  amount      Float?
+  location    String?
+  timestamp   DateTime @default(now())
+  
+  // Link back to the usage that created this order
+  usageId     String?  @unique
+  usage       Usage?   @relation(fields: [usageId], references: [id])
+  
+  @@index([type, timestamp])
+  @@index([status, timestamp])
+}
+
+model ApiMetrics {
+  id          String   @id @default(uuid())
+  service     String   // 'ondc', 'namma_yatri', 'bookmyshow'
+  endpoint    String
+  statusCode  Int
+  duration    Int
+  timestamp   DateTime @default(now())
+  
+  @@index([service, timestamp])
+}
